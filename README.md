@@ -22,7 +22,7 @@ Draws a selection rectangle, sends the screenshot to Claude, and creates an even
 git clone https://github.com/BSoDium/raycast-capture-and-create
 cd raycast-capture-and-create
 npm install
-ray develop
+npm run dev
 ```
 
 Then open Raycast, search for either command, and fill in the Extension Preferences.
@@ -49,3 +49,17 @@ On first run, the command will open a browser to complete the OAuth flow.
 ## Privacy
 
 Screenshots are sent to the Anthropic API for analysis and immediately deleted from disk. No data is stored by this extension beyond what Raycast persists locally (OAuth tokens in Keychain, preferences).
+
+## Security considerations
+
+**AppleScript execution (Capture to Calendar).** Event data (title, location, description, calendar name) is passed to `osascript` as `argv` values, never interpolated into script source text — this closes off AppleScript/shell injection regardless of what a screenshot or the calendar name argument contains.
+
+**Prompt injection via screenshot content.** Screenshots are analyzed by a vision-capable LLM (Claude). Like any tool that feeds untrusted visual content to an LLM, this extension is potentially susceptible to *prompt injection* — an adversarial screenshot (e.g. a poisoned webpage, email, or image containing hidden/faint text addressed to an AI) could attempt to manipulate Claude's output, for example fabricating a misleading task title, a fake deadline, or a misleading link in the description.
+
+This is a known, unsolved class of risk for any tool that summarizes untrusted content with an LLM. Mitigations in place:
+- The extraction prompt explicitly instructs Claude to treat all visible image text as untrusted content to summarize, never as instructions to follow.
+- Extracted fields are length-capped and stripped of control/invisible characters before use.
+- Extracted data can never execute code — Calendar events are created via safe `argv` passing (see above) and Google Tasks via a JSON API request body.
+- **Nothing is created without your explicit confirmation.** Always check the confirmation dialog against what you actually screenshotted — especially unfamiliar links, dates, or wording in the location/description/notes — before accepting.
+
+If you screenshot content from a source you don't fully trust, treat the extracted title/notes/description with the same scrutiny you'd give any content from that source.

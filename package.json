@@ -5,7 +5,7 @@
   "title": "Capture & Create",
   "description": "Capture a screen region and create a Google Task or Calendar event with Claude",
   "icon": "extension-icon.png",
-  "author": "bsodium",
+  "author": "BSoDium",
   "categories": [
     "Productivity"
   ],
